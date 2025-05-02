@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    environment {
+        // Definir la imagen de Docker que se utilizará para la construcción y ejecución de pruebas
+        DOCKER_IMAGE = 'python:3.10-slim'
+    }
+
+    stages {
+        stage('Clonar repositorio') {
+            steps {
+                git 'https://tu-repositorio.git'  // Reemplaza con tu URL real
+            }
+        }
+
+        stage('Construir imagen Docker') {
+            steps {
+                script {
+                    // Construir la imagen Docker
+                    sh 'docker build -t calculadora .'
+                }
+            }
+        }
+
+        stage('Ejecutar pruebas con Docker') {
+            steps {
+                script {
+                    // Ejecutar las pruebas dentro del contenedor Docker
+                    sh 'docker run --rm calculadora python -m unittest test_calculadora.py'
+                }
+            }
+        }
+
+        stage('Ejecutar la aplicación con parámetros') {
+            steps {
+                script {
+                    // Pasar dos parámetros (números) a la ejecución de la calculadora
+                    def num1 = 5
+                    def num2 = 7
+                    sh "docker run --rm calculadora python main.py ${num1} ${num2}"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'El pipeline se ha ejecutado.'
+        }
+        success {
+            echo 'Las pruebas se han ejecutado correctamente y la aplicación se ha iniciado con parámetros.'
+        }
+        failure {
+            echo 'Algunas pruebas fallaron o no se pudo ejecutar la aplicación.'
+        }
+    }
+}
